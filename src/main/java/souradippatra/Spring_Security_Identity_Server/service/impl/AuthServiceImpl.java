@@ -1,41 +1,37 @@
 package souradippatra.Spring_Security_Identity_Server.service.impl;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
-import souradippatra.Spring_Security_Identity_Server.dto.UserAccountDTO;
 import souradippatra.Spring_Security_Identity_Server.model.UserAccount;
 import souradippatra.Spring_Security_Identity_Server.repository.UserAccountRepository;
 import souradippatra.Spring_Security_Identity_Server.service.AuthService;
 
-public class AuthServiceImpl implements AuthService{
+import org.springframework.stereotype.Service;
 
-    private final UserAccountRepository userRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
-    public AuthServiceImpl(UserAccountRepository userRepository){
-        this.userRepository = userRepository;
-    }
-    @Override
-    public UserAccount register(String username, String password, String role) {
-        UserAccount new_user = new UserAccount(null, username, password, role);
-        return userRepository.save(new_user);
-    }
+@Service
+public class AuthServiceImpl implements AuthService {
 
-    @Override
-    public UserAccount login(String username, String password, String role) {
-        UserAccount loggedUser = userRepository.findByUsername(username)
-                                        .filter(user -> user.getPassword().equals(password))
-                                        .orElse(null);
-        return loggedUser;
+    private final UserAccountRepository repository;
+    private final PasswordEncoder passwordEncoder;
+
+    public AuthServiceImpl(UserAccountRepository repository, PasswordEncoder passwordEncoder) {
+        this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
-    public Page<UserAccountDTO> getAllUsers(Pageable pageable) {
-        Page<UserAccount> users = userRepository.findAll(pageable);
-
-        Page<UserAccountDTO> this_page = users.map(user -> new UserAccountDTO(user.getId(), user.getUsername(), user.getRole()));
-
-        return this_page;
+    public boolean authenticate(String username, String rawPassword) {
+        UserAccount user = repository.findByUsername(username);
+        if (user == null) return false;
+        return passwordEncoder.matches(rawPassword, user.getPassword());
     }
 
+    @Override
+    public UserAccount register(String username, String rawPassword, String role) {
+        UserAccount user = new UserAccount();
+        user.setUsername(username);
+        user.setPassword(passwordEncoder.encode(rawPassword));
+        user.setRole(role);
+        return repository.save(user);
+    }
 }
