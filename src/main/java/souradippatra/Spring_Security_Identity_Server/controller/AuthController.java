@@ -5,7 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import souradippatra.Spring_Security_Identity_Server.service.AuthService;
-import souradippatra.Spring_Security_Identity_Server.model.UserAccount;
+import souradippatra.Spring_Security_Identity_Server.dto.UserAccountDTO;
+//import souradippatra.Spring_Security_Identity_Server.model.UserAccount;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -28,10 +29,10 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UserAccount> register(@RequestParam String username,
+    public ResponseEntity<UserAccountDTO> register(@RequestParam String username,
                                                 @RequestParam String password,
                                                 @RequestParam(defaultValue = "USER") String role) {
-        UserAccount created = authService.register(username, password, role);
+        UserAccountDTO created = authService.register(username, password, role);
         return ResponseEntity.ok(created);
     }
 }
